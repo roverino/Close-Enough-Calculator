@@ -37,7 +37,7 @@ def main():
 - when encountering an operator
     - while operator isnt a left paren AND it has a lesser or equal prescendence
         - pop the top of the stack
-        - REMEMBER, left operands of equal precedence have GREATER precedence because left to right rule (rule of associativity)
+        - REMEMBER, left operators of equal precedence have GREATER precedence because left to right rule (rule of associativity)
     - push operator onto operator stack
 - when encountering a left paren
     - push it onto the stack 
@@ -48,7 +48,6 @@ def main():
     - pop and destroy the left paren once you hit it
 - when empty, pop all the operators remaining on the output stack
 """
-
 def convertToPostfix(expr:str):
     postfix = ""
 
@@ -62,10 +61,51 @@ def convertToPostfix(expr:str):
         # Each capture is assigned to 1, 2, 3... etc, and thus can be manipulated as such
         # re.sub will replace all instances so no need for a loop
     expr = expr.replace(" ", "")
-    return expr
 
-    operandStack = list()
-    finalExpr = str()
+    operatorStack = list()
+    finalExpr = list()
+
+    tokenList = re.findall(r"\d+|[+-/*()^]", expr) #cleaner than bottom, no need to capture
+    #tokenList = re.split(r"([+\-*/()])", expr) #parens capture operators, square brackets create character class
+    precedence = {
+        '+':1,
+        '-':1,
+        '*':2,
+        '/':2,
+        '^':3,
+        '(':4,
+        ')':4
+    }
+    for token in tokenList:
+        print (f"Current postfix expression: {finalExpr}")
+        if (token.isdigit()): #check if number
+            finalExpr.append(token) # straight on the stack
+        elif (operatorStack==[]): # if operator stack is empty
+            operatorStack.append(token) # push the token onto the stack
+        elif (token != "(" and precedence[token]<=precedence[operatorStack[-1]]): # if token is an operator with lower or equal precedence
+            while(operatorStack!=[] and precedence[token]<=precedence[operatorStack[-1]]): # pop the stack onto the final expression until you hit something of lower precedence
+                #print( "pop!")
+                finalExpr.append(operatorStack[-1]) # BUG problem somewhere in here. use input ((1+2)*3-4)*5
+                operatorStack.pop()
+            operatorStack.append(token)
+        elif (token != ")"): # can only be (
+            print (f"Adding {token} to operator stack")
+            operatorStack.append(token)
+        else: # can only be )
+            while (operatorStack!=[] and operatorStack[-1]!="("):
+                if (operatorStack[-1]!='('):
+                    # pop from operators, and push to final
+                    finalExpr.append(operatorStack[-1])
+                print (f"Removing {operatorStack[-1]}")
+                operatorStack.pop()
+            #operatorStack.pop()
+    # take remaining operator stack and pop each to final
+    while (operatorStack != []): # while operatorstack is not empty
+        finalExpr.append(operatorStack[-1]) # push top of stack onto final expression
+        operatorStack.pop() # pop operator stack
+    print (finalExpr)
+    return finalExpr
+    
 
     
 
@@ -78,7 +118,7 @@ def convertToPostfix(expr:str):
 # TODO evaluate postfix
 """Rules for evaluating postfix
 - push numbers onto the stack as they come
-- when encountering an operand, pop the last two numbers and evaluate them them
+- when encountering an operator, pop the last two numbers and evaluate them them
     - push the result back onto the stack
 - repeat until only one number remains and you've run through the whole expression
 """
