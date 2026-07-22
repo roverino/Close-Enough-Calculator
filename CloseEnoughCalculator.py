@@ -51,7 +51,7 @@ def main():
 def convertToPostfix(expr:str):
     postfix = ""
 
-    # DESCRIPTION: Converting mixed numbers into postfix friendly expressions
+    # CONVERTING MIXED NUMBERS INTO POSTFIX-FRIENDLY EXPRESSIONS
     # Why not just convert instances of spaces into +'s if you assume no user error?
         # "3 * 1 1/8" would be incorrect due to order of operations
     expr = re.sub(
@@ -66,7 +66,6 @@ def convertToPostfix(expr:str):
     finalExpr = list()
 
     tokenList = re.findall(r"\d+|[+-/*()^]", expr) #cleaner than bottom, no need to capture
-    #tokenList = re.split(r"([+\-*/()])", expr) #parens capture operators, square brackets create character class
     precedence = {
         '+':1,
         '-':1,
@@ -76,44 +75,55 @@ def convertToPostfix(expr:str):
         '(':4,
         ')':4
     }
+    # MAIN LOOP
     for token in tokenList:
         print (f"Current postfix expression: {finalExpr}")
+
         if (token.isdigit()): #check if number
             finalExpr.append(token) # straight on the stack
+
         elif (operatorStack==[]): # if operator stack is empty
-            operatorStack.append(token) # push the token onto the stack
-        elif (token != "(" and precedence[token]<=precedence[operatorStack[-1]]): # if token is an operator with lower or equal precedence
-            while(operatorStack!=[] and precedence[token]<=precedence[operatorStack[-1]]): # pop the stack onto the final expression until you hit something of lower precedence
-                #print( "pop!")
-                finalExpr.append(operatorStack[-1]) # BUG problem somewhere in here. use input ((1+2)*3-4)*5
+            operatorStack.append(token) # push the operator onto the stack
+        # if token is an operator with lower or equal precedence
+
+        elif (token != "(" and precedence[token]<=precedence[operatorStack[-1]]):
+            # pop the stack onto the final expression until you hit something of lower precedence
+            while(operatorStack!=[] and precedence[token]<=precedence[operatorStack[-1]]):
+                # loop will pop onto finalExpr until you hit a right paren, as that's only resolved when token is a right paren
+                if (operatorStack[-1] == "("):
+                    break # not sure if breaking is bad coding
+                else:
+                    finalExpr.append(operatorStack[-1])
                 operatorStack.pop()
+            # finally place your token onto a precedence-free stack
             operatorStack.append(token)
+
         elif (token != ")"): # can only be (
             print (f"Adding {token} to operator stack")
             operatorStack.append(token)
+
         else: # can only be )
             while (operatorStack!=[] and operatorStack[-1]!="("):
                 if (operatorStack[-1]!='('):
                     # pop from operators, and push to final
                     finalExpr.append(operatorStack[-1])
-                print (f"Removing {operatorStack[-1]}")
+                    operatorStack.pop()
+                # this last one pops the hanging paren
                 operatorStack.pop()
-            #operatorStack.pop()
+                break
+
     # take remaining operator stack and pop each to final
-    while (operatorStack != []): # while operatorstack is not empty
-        finalExpr.append(operatorStack[-1]) # push top of stack onto final expression
-        operatorStack.pop() # pop operator stack
+    while (operatorStack != []):
+        finalExpr.append(operatorStack[-1])
+        operatorStack.pop()
     print (finalExpr)
+
+    #check if unmatched parentheses
+    for char in finalExpr:
+        if (char == "(" or char == ")"):
+            raise ValueError("Unexpected item in bagging area - unmatched parentheses!")
+
     return finalExpr
-    
-
-    
-
-    # replace all spaces with addition symbol
-    # NOTE this only works if user input is correct. more robust way would be regex
-    # i think regex would be "\d+ d+\/\d+", and then add a space, 
-    # but doing that might be unncessarily hard for a first version
-    return postfix
 
 # TODO evaluate postfix
 """Rules for evaluating postfix
